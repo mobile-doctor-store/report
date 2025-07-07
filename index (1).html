@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GATE CSE Preparation 2025</title>
+    <meta name="description" content="Complete GATE Computer Science Engineering preparation platform with practice questions, mock tests, and progress tracking.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#059669'
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script>
+        // Utility functions
+        const Utils = {
+            setItem: (key, value) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (error) {
+                    console.error('Error saving to localStorage:', error);
+                    return false;
+                }
+            },
+
+            getItem: (key, defaultValue = null) => {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : defaultValue;
+                } catch (error) {
+                    console.error('Error reading from localStorage:', error);
+                    return defaultValue;
+                }
+            },
+
+            validatePhone: (phone) => {
+                const phoneRegex = /^[6-9]\d{9}$/;
+                return phoneRegex.test(phone.replace(/\D/g, ''));
+            },
+
+            calculateProgress: (solved, total) => {
+                if (total === 0) return 0;
+                return Math.round((solved / total) * 100);
+            },
+
+            showToast: (message, type = 'info') => {
+                const toast = document.createElement('div');
+                const colors = {
+                    success: 'bg-green-500',
+                    error: 'bg-red-500',
+                    warning: 'bg-yellow-500',
+                    info: 'bg-blue-500'
+                };
+                
+                toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 text-white ${colors[type]}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        };
+
+        // Sample data
+        const GATE_DATA = {
+            subjects: [
+                { id: 'dsa', name: 'Data Structures & Algorithms', totalQuestions: 8500 },
+                { id: 'networks', name: 'Computer Networks', totalQuestions: 6200 },
+                { id: 'os', name: 'Operating Systems', totalQuestions: 5800 },
+                { id: 'dbms', name: 'Database Management', totalQuestions: 4900 },
+                { id: 'coa', name: 'Computer Organization', totalQuestions: 4200 },
+                { id: 'compiler', name: 'Compiler Design', totalQuestions: 3800 },
+                { id: 'toc', name: 'Theory of Computation', totalQuestions: 3600 },
+                { id: 'dm', name: 'Discrete Mathematics', totalQuestions: 4200 }
+            ],
+
+            questions: [
+                {
+                    id: 1,
+                    subject: 'dsa',
+                    difficulty: 'medium',
+                    question: 'What is the time complexity of inserting an element at the beginning of a dynamic array?',
+                    options: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'],
+                    correctAnswer: 2,
+                    explanation: 'Inserting at the beginning requires shifting all existing elements one position to the right, which takes O(n) time.'
+                },
+                {
+                    id: 2,
+                    subject: 'networks',
+                    difficulty: 'easy',
+                    question: 'Which layer of the OSI model is responsible for end-to-end delivery?',
+                    options: ['Network Layer', 'Transport Layer', 'Session Layer', 'Application Layer'],
+                    correctAnswer: 1,
+                    explanation: 'The Transport Layer (Layer 4) is responsible for end-to-end delivery of messages.'
+                },
+                {
+                    id: 3,
+                    subject: 'os',
+                    difficulty: 'medium',
+                    question: 'In a preemptive scheduling system, what happens when a higher priority process arrives?',
+                    options: [
+                        'Current process continues until completion',
+                        'Current process is immediately suspended',
+                        'System crashes',
+                        'Both processes run simultaneously'
+                    ],
+                    correctAnswer: 1,
+                    explanation: 'In preemptive scheduling, the currently running process is immediately suspended when a higher priority process arrives.'
+                }
+            ]
+        };
+
+        // React Components
+        const { useState, useEffect } = React;
+
+        // Navigation Component
+        function Navigation({ currentPage, setCurrentPage, user }) {
+            return React.createElement('nav', {
+                className: 'bg-white shadow-lg sticky top-0 z-50'
+            },
+                React.createElement('div', {
+                    className: 'max-w-6xl mx-auto px-4'
+                },
+                    React.createElement('div', {
+                        className: 'flex justify-between items-center h-16'
+                    },
+                        React.createElement('h1', {
+                            className: 'text-2xl font-bold text-primary cursor-pointer',
+                            onClick: () => setCurrentPage('dashboard')
+                        }, 'GATE CSE 2025'),
+                        React.createElement('div', {
+                            className: 'flex space-x-6'
+                        },
+                            ['dashboard', 'practice', 'mock-tests', 'resources'].map(page =>
+                                React.createElement('button', {
+                                    key: page,
+                                    className: `px-3 py-2 rounded text-sm font-medium ${
+                                        currentPage === page ? 'text-primary bg-blue-50' : 'text-gray-600 hover:text-primary'
+                                    }`,
+                                    onClick: () => setCurrentPage(page)
+                                }, page.charAt(0).toUpperCase() + page.slice(1).replace('-', ' '))
+                            )
+                        ),
+                        React.createElement('div', {
+                            className: 'text-sm text-gray-600'
+                        }, user ? `Welcome, ${user.name}` : 'Guest')
+                    )
+                )
+            );
+        }
+
+        // Dashboard Component
+        function Dashboard({ user, progress }) {
+            const daysToGate = Math.ceil((new Date('2025-02-15') - new Date()) / (1000 * 60 * 60 * 24));
+
+            return React.createElement('main', {
+                className: 'max-w-6xl mx-auto px-4 py-8'
+            },
+                React.createElement('div', {
+                    className: 'bg-gradient-to-r from-primary to-blue-600 rounded-xl p-6 text-white mb-8'
+                },
+                    React.createElement('div', {
+                        className: 'flex justify-between items-center'
+                    },
+                        React.createElement('div', null,
+                            React.createElement('h2', {
+                                className: 'text-3xl font-bold mb-2'
+                            }, `Welcome back, ${user?.name || 'Student'}!`),
+                            React.createElement('p', {
+                                className: 'text-blue-100'
+                            }, 'Continue your GATE CSE preparation journey')
+                        ),
+                        React.createElement('div', {
+                            className: 'text-center'
+                        },
+                            React.createElement('div', {
+                                className: 'text-3xl font-bold'
+                            }, daysToGate),
+                            React.createElement('div', {
+                                className: 'text-blue-200'
+                            }, 'Days to GATE')
+                        )
+                    )
+                ),
+
+                React.createElement('div', {
+                    className: 'grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'
+                },
+                    React.createElement(StatsCard, {
+                        title: 'Questions Solved',
+                        value: progress?.questionsSolved || 0,
+                        color: 'green'
+                    }),
+                    React.createElement(StatsCard, {
+                        title: 'Mock Tests',
+                        value: progress?.mockTestsTaken || 0,
+                        color: 'blue'
+                    }),
+                    React.createElement(StatsCard, {
+                        title: 'Study Streak',
+                        value: progress?.streak || 0,
+                        color: 'orange'
+                    }),
+                    React.createElement(StatsCard, {
+                        title: 'Weak Areas',
+                        value: progress?.weakAreas?.length || 0,
+                        color: 'red'
+                    })
+                ),
+
+                React.createElement(SubjectProgress, { progress: progress?.subjectProgress || {} })
+            );
+        }
+
+        // Stats Card Component
+        function StatsCard({ title, value, color }) {
+            return React.createElement('div', {
+                className: 'bg-white rounded-xl p-6 shadow-sm border'
+            },
+                React.createElement('p', {
+                    className: 'text-gray-600 text-sm font-medium'
+                }, title),
+                React.createElement('p', {
+                    className: 'text-2xl font-bold text-gray-900 mt-2'
+                }, value.toLocaleString())
+            );
+        }
+
+        // Subject Progress Component
+        function SubjectProgress({ progress }) {
+            return React.createElement('div', {
+                className: 'bg-white rounded-xl p-6 shadow-sm border'
+            },
+                React.createElement('h3', {
+                    className: 'text-xl font-semibold text-gray-900 mb-6'
+                }, 'Subject-wise Progress'),
+                React.createElement('div', {
+                    className: 'grid grid-cols-2 md:grid-cols-4 gap-6'
+                },
+                    GATE_DATA.subjects.slice(0, 4).map(subject => {
+                        const subjectProgress = progress[subject.id] || { solved: 0, total: subject.totalQuestions };
+                        const percentage = Utils.calculateProgress(subjectProgress.solved, subjectProgress.total);
+                        
+                        return React.createElement('div', {
+                            key: subject.id,
+                            className: 'text-center'
+                        },
+                            React.createElement('div', {
+                                className: 'w-16 h-16 mx-auto mb-2 rounded-full bg-blue-100 flex items-center justify-center'
+                            },
+                                React.createElement('span', {
+                                    className: 'text-sm font-semibold text-blue-600'
+                                }, `${percentage}%`)
+                            ),
+                            React.createElement('h4', {
+                                className: 'font-medium text-sm'
+                            }, subject.name),
+                            React.createElement('p', {
+                                className: 'text-xs text-gray-600'
+                            }, `${subjectProgress.solved}/${subjectProgress.total}`)
+                        );
+                    })
+                )
+            );
+        }
+
+        // Practice Page Component
+        function PracticePage({ user, progress, updateProgress }) {
+            const [currentQuestion, setCurrentQuestion] = useState(null);
+            const [userAnswer, setUserAnswer] = useState(null);
+            const [showExplanation, setShowExplanation] = useState(false);
+            const [questionIndex, setQuestionIndex] = useState(0);
+
+            useEffect(() => {
+                setCurrentQuestion(GATE_DATA.questions[0]);
+            }, []);
+
+            const handleAnswerSubmit = () => {
+                if (userAnswer === null) {
+                    Utils.showToast('Please select an answer', 'warning');
+                    return;
+                }
+
+                const isCorrect = userAnswer === currentQuestion.correctAnswer;
+                setShowExplanation(true);
+
+                if (isCorrect) {
+                    Utils.showToast('Correct! Well done!', 'success');
+                } else {
+                    Utils.showToast('Incorrect. Review the explanation.', 'error');
+                }
+            };
+
+            const nextQuestion = () => {
+                const nextIndex = (questionIndex + 1) % GATE_DATA.questions.length;
+                setCurrentQuestion(GATE_DATA.questions[nextIndex]);
+                setQuestionIndex(nextIndex);
+                setUserAnswer(null);
+                setShowExplanation(false);
+            };
+
+            if (!currentQuestion) {
+                return React.createElement('div', {
+                    className: 'flex justify-center items-center h-64'
+                },
+                    React.createElement('div', {
+                        className: 'loading-spinner'
+                    })
+                );
+            }
+
+            return React.createElement('main', {
+                className: 'max-w-4xl mx-auto px-4 py-8'
+            },
+                React.createElement('h1', {
+                    className: 'text-3xl font-bold text-gray-900 mb-8'
+                }, 'Practice Questions'),
+
+                React.createElement('div', {
+                    className: 'bg-white rounded-xl shadow-sm border p-6'
+                },
+                    React.createElement('div', {
+                        className: 'mb-4'
+                    },
+                        React.createElement('span', {
+                            className: 'inline-block px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800'
+                        }, `Question ${questionIndex + 1} of ${GATE_DATA.questions.length}`)
+                    ),
+
+                    React.createElement('h3', {
+                        className: 'text-lg font-medium text-gray-900 mb-6'
+                    }, currentQuestion.question),
+
+                    React.createElement('div', {
+                        className: 'space-y-3 mb-6'
+                    },
+                        currentQuestion.options.map((option, index) =>
+                            React.createElement('label', {
+                                key: index,
+                                className: `flex items-center space-x-3 p-3 rounded-lg border cursor-pointer ${
+                                    userAnswer === index ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+                                } ${showExplanation && index === currentQuestion.correctAnswer ? 'border-green-500 bg-green-50' : ''}
+                                ${showExplanation && userAnswer === index && index !== currentQuestion.correctAnswer ? 'border-red-500 bg-red-50' : ''}`
+                            },
+                                React.createElement('input', {
+                                    type: 'radio',
+                                    name: 'answer',
+                                    value: index,
+                                    checked: userAnswer === index,
+                                    onChange: () => !showExplanation && setUserAnswer(index),
+                                    disabled: showExplanation
+                                }),
+                                React.createElement('span', null, option)
+                            )
+                        )
+                    ),
+
+                    showExplanation && React.createElement('div', {
+                        className: 'bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6'
+                    },
+                        React.createElement('h4', {
+                            className: 'font-medium text-blue-900 mb-2'
+                        }, 'Explanation:'),
+                        React.createElement('p', {
+                            className: 'text-blue-800'
+                        }, currentQuestion.explanation)
+                    ),
+
+                    React.createElement('div', {
+                        className: 'flex justify-end space-x-3'
+                    },
+                        !showExplanation ? React.createElement('button', {
+                            className: 'px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 btn-primary',
+                            onClick: handleAnswerSubmit
+                        }, 'Submit Answer') : React.createElement('button', {
+                            className: 'px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700',
+                            onClick: nextQuestion
+                        }, 'Next Question')
+                    )
+                )
+            );
+        }
+
+        // Other Pages (simplified)
+        function MockTestsPage() {
+            return React.createElement('main', {
+                className: 'max-w-6xl mx-auto px-4 py-8'
+            },
+                React.createElement('h1', {
+                    className: 'text-3xl font-bold text-gray-900 mb-8'
+                }, 'Mock Tests'),
+                React.createElement('div', {
+                    className: 'bg-white rounded-xl p-8 text-center'
+                },
+                    React.createElement('h3', {
+                        className: 'text-xl font-semibold mb-4'
+                    }, 'Mock Tests Coming Soon'),
+                    React.createElement('p', {
+                        className: 'text-gray-600'
+                    }, 'Full-length GATE pattern tests with timer and scoring system.')
+                )
+            );
+        }
+
+        function ResourcesPage() {
+            return React.createElement('main', {
+                className: 'max-w-6xl mx-auto px-4 py-8'
+            },
+                React.createElement('h1', {
+                    className: 'text-3xl font-bold text-gray-900 mb-8'
+                }, 'Study Resources'),
+                React.createElement('div', {
+                    className: 'bg-white rounded-xl p-8 text-center'
+                },
+                    React.createElement('h3', {
+                        className: 'text-xl font-semibold mb-4'
+                    }, 'Resources Coming Soon'),
+                    React.createElement('p', {
+                        className: 'text-gray-600'
+                    }, 'Comprehensive study materials, video lectures, and previous year papers.')
+                )
+            );
+        }
+
+        // Registration Modal Component
+        function RegistrationModal({ isOpen, onClose, onSubmit }) {
+            const [formData, setFormData] = useState({ name: '', phone: '' });
+            const [error, setError] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setError('');
+
+                if (!formData.name.trim()) {
+                    setError('Name is required');
+                    return;
+                }
+
+                if (!Utils.validatePhone(formData.phone)) {
+                    setError('Please enter a valid 10-digit mobile number');
+                    return;
+                }
+
+                onSubmit(formData);
+                Utils.showToast('Registration successful!', 'success');
+            };
+
+            if (!isOpen) return null;
+
+            return React.createElement('div', {
+                className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'
+            },
+                React.createElement('div', {
+                    className: 'bg-white rounded-xl p-6 w-full max-w-md'
+                },
+                    React.createElement('h2', {
+                        className: 'text-2xl font-bold text-gray-900 mb-4'
+                    }, 'Welcome to GATE CSE 2025'),
+                    React.createElement('p', {
+                        className: 'text-gray-600 mb-6'
+                    }, 'Please register to start your preparation journey'),
+                    
+                    React.createElement('form', {
+                        onSubmit: handleSubmit
+                    },
+                        React.createElement('div', {
+                            className: 'mb-4'
+                        },
+                            React.createElement('label', {
+                                className: 'block text-sm font-medium text-gray-700 mb-2'
+                            }, 'Full Name'),
+                            React.createElement('input', {
+                                type: 'text',
+                                className: 'w-full px-3 py-2 border border-gray-300 rounded-lg',
+                                value: formData.name,
+                                onChange: (e) => setFormData({ ...formData, name: e.target.value }),
+                                placeholder: 'Enter your full name'
+                            })
+                        ),
+                        React.createElement('div', {
+                            className: 'mb-6'
+                        },
+                            React.createElement('label', {
+                                className: 'block text-sm font-medium text-gray-700 mb-2'
+                            }, 'Mobile Number'),
+                            React.createElement('input', {
+                                type: 'tel',
+                                className: 'w-full px-3 py-2 border border-gray-300 rounded-lg',
+                                value: formData.phone,
+                                onChange: (e) => setFormData({ ...formData, phone: e.target.value }),
+                                placeholder: '10-digit mobile number'
+                            })
+                        ),
+                        
+                        error && React.createElement('div', {
+                            className: 'mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm'
+                        }, error),
+                        
+                        React.createElement('button', {
+                            type: 'submit',
+                            className: 'w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 btn-primary'
+                        }, 'Start Preparation')
+                    )
+                )
+            );
+        }
+
+        // Main App Component
+        function App() {
+            const [currentPage, setCurrentPage] = useState('dashboard');
+            const [user, setUser] = useState(null);
+            const [progress, setProgress] = useState(null);
+            const [showRegistration, setShowRegistration] = useState(false);
+            const [isLoading, setIsLoading] = useState(true);
+
+            useEffect(() => {
+                const savedUser = Utils.getItem('user');
+                const savedProgress = Utils.getItem('progress');
+
+                if (savedUser) {
+                    setUser(savedUser);
+                    setProgress(savedProgress || generateInitialProgress());
+                } else {
+                    setShowRegistration(true);
+                }
+                
+                setIsLoading(false);
+            }, []);
+
+            const generateInitialProgress = () => {
+                const subjectProgress = {};
+                GATE_DATA.subjects.forEach(subject => {
+                    subjectProgress[subject.id] = {
+                        solved: Math.floor(Math.random() * 100),
+                        total: subject.totalQuestions
+                    };
+                });
+
+                return {
+                    questionsSolved: 247,
+                    mockTestsTaken: 3,
+                    streak: 12,
+                    weakAreas: ['DBMS Normalization', 'Graph Algorithms'],
+                    subjectProgress: subjectProgress
+                };
+            };
+
+            const handleUserRegistration = (userData) => {
+                const newUser = {
+                    ...userData,
+                    id: Date.now(),
+                    registrationDate: new Date().toISOString()
+                };
+
+                const initialProgress = generateInitialProgress();
+
+                setUser(newUser);
+                setProgress(initialProgress);
+                setShowRegistration(false);
+
+                Utils.setItem('user', newUser);
+                Utils.setItem('progress', initialProgress);
+            };
+
+            if (isLoading) {
+                return React.createElement('div', {
+                    className: 'min-h-screen flex items-center justify-center'
+                },
+                    React.createElement('div', {
+                        className: 'text-center'
+                    },
+                        React.createElement('div', {
+                            className: 'loading-spinner mx-auto mb-4'
+                        }),
+                        React.createElement('p', {
+                            className: 'text-gray-600'
+                        }, 'Loading GATE CSE Platform...')
+                    )
+                );
+            }
+
+            return React.createElement('div', {
+                className: 'min-h-screen bg-gray-50'
+            },
+                React.createElement(Navigation, {
+                    currentPage,
+                    setCurrentPage,
+                    user
+                }),
+
+                currentPage === 'dashboard' && React.createElement(Dashboard, {
+                    user,
+                    progress
+                }),
+                
+                currentPage === 'practice' && React.createElement(PracticePage, {
+                    user,
+                    progress
+                }),
+                
+                currentPage === 'mock-tests' && React.createElement(MockTestsPage),
+                
+                currentPage === 'resources' && React.createElement(ResourcesPage),
+
+                React.createElement(RegistrationModal, {
+                    isOpen: showRegistration,
+                    onClose: () => setShowRegistration(false),
+                    onSubmit: handleUserRegistration
+                }),
+
+                React.createElement('footer', {
+                    className: 'bg-gray-900 text-white py-8 mt-16'
+                },
+                    React.createElement('div', {
+                        className: 'max-w-6xl mx-auto px-4 text-center'
+                    },
+                        React.createElement('h3', {
+                            className: 'text-lg font-semibold mb-2'
+                        }, 'GATE CSE Preparation 2025'),
+                        React.createElement('p', {
+                            className: 'text-gray-400'
+                        }, 'Your pathway to success in GATE Computer Science Engineering')
+                    )
+                )
+            );
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(React.createElement(App));
+        });
+    </script>
+</body>
+</html>

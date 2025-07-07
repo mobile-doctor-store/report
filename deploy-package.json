@@ -1,0 +1,16 @@
+{
+  "name": "gate-exam-preparation-2025",
+  "version": "1.0.0",
+  "description": "GATE CSE preparation platform with practice questions, mock tests, and progress tracking",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step required for static HTML'",
+    "start": "echo 'Static HTML application - open index.html in browser'"
+  },
+  "keywords": ["gate", "cse", "exam", "preparation", "computer-science"],
+  "author": "GATE CSE Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
