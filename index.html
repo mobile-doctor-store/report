@@ -28,6 +28,10 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
+    <!-- Load GATE CSE Questions Data -->
+    <!-- This script must be loaded before the main app script that uses GATE_CSE_QUESTIONS -->
+    <script src="gate_questions.js"></script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -121,7 +125,7 @@
             }
         };
 
-        // Sample data
+        // Sample data (questions array will now be loaded from gate_questions.js)
         const GATE_DATA = {
             subjects: [
                 { id: 'dsa', name: 'Data Structures & Algorithms', totalQuestions: 8500 },
@@ -133,45 +137,12 @@
                 { id: 'toc', name: 'Theory of Computation', totalQuestions: 3600 },
                 { id: 'dm', name: 'Discrete Mathematics', totalQuestions: 4200 }
             ],
-
-            questions: [
-                {
-                    id: 1,
-                    subject: 'dsa',
-                    difficulty: 'medium',
-                    question: 'What is the time complexity of inserting an element at the beginning of a dynamic array?',
-                    options: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'],
-                    correctAnswer: 2,
-                    explanation: 'Inserting at the beginning requires shifting all existing elements one position to the right, which takes O(n) time.'
-                },
-                {
-                    id: 2,
-                    subject: 'networks',
-                    difficulty: 'easy',
-                    question: 'Which layer of the OSI model is responsible for end-to-end delivery?',
-                    options: ['Network Layer', 'Transport Layer', 'Session Layer', 'Application Layer'],
-                    correctAnswer: 1,
-                    explanation: 'The Transport Layer (Layer 4) is responsible for end-to-end delivery of messages.'
-                },
-                {
-                    id: 3,
-                    subject: 'os',
-                    difficulty: 'medium',
-                    question: 'In a preemptive scheduling system, what happens when a higher priority process arrives?',
-                    options: [
-                        'Current process continues until completion',
-                        'Current process is immediately suspended',
-                        'System crashes',
-                        'Both processes run simultaneously'
-                    ],
-                    correctAnswer: 1,
-                    explanation: 'In preemptive scheduling, the currently running process is immediately suspended when a higher priority process arrives.'
-                }
-            ]
+            // GATE_DATA.questions will now be populated from window.GATE_CSE_QUESTIONS after gate_questions.js loads
+            questions: [] 
         };
 
         // React Components
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React; // Added useRef for potential future use or direct DOM access
 
         // Navigation Component
         function Navigation({ currentPage, setCurrentPage, user }) {
@@ -297,7 +268,7 @@
                 React.createElement('div', {
                     className: 'grid grid-cols-2 md:grid-cols-4 gap-6'
                 },
-                    GATE_DATA.subjects.slice(0, 4).map(subject => {
+                    GATE_DATA.subjects.slice(0, 4).map(subject => { // Displaying first 4 subjects for brevity on dashboard
                         const subjectProgress = progress[subject.id] || { solved: 0, total: subject.totalQuestions };
                         const percentage = Utils.calculateProgress(subjectProgress.solved, subjectProgress.total);
                         
@@ -330,9 +301,18 @@
             const [userAnswer, setUserAnswer] = useState(null);
             const [showExplanation, setShowExplanation] = useState(false);
             const [questionIndex, setQuestionIndex] = useState(0);
+            const [questionsLoaded, setQuestionsLoaded] = useState(false);
 
+            // Load questions from the global GATE_CSE_QUESTIONS array
             useEffect(() => {
-                setCurrentQuestion(GATE_DATA.questions[0]);
+                if (window.GATE_CSE_QUESTIONS && window.GATE_CSE_QUESTIONS.length > 0) {
+                    GATE_DATA.questions = window.GATE_CSE_QUESTIONS; // Populate GATE_DATA.questions
+                    setCurrentQuestion(GATE_DATA.questions[0]);
+                    setQuestionsLoaded(true);
+                } else {
+                    console.error("GATE_CSE_QUESTIONS not found or empty.");
+                    // Handle error, maybe show a message to the user
+                }
             }, []);
 
             const handleAnswerSubmit = () => {
@@ -357,15 +337,20 @@
                 setQuestionIndex(nextIndex);
                 setUserAnswer(null);
                 setShowExplanation(false);
+                // Scroll to top of the question for better UX
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             };
 
-            if (!currentQuestion) {
+            if (!questionsLoaded || !currentQuestion) {
                 return React.createElement('div', {
                     className: 'flex justify-center items-center h-64'
                 },
                     React.createElement('div', {
                         className: 'loading-spinner'
-                    })
+                    }),
+                    React.createElement('p', {
+                        className: 'ml-4 text-gray-600'
+                    }, 'Loading questions...')
                 );
             }
 
@@ -591,16 +576,16 @@
                 const subjectProgress = {};
                 GATE_DATA.subjects.forEach(subject => {
                     subjectProgress[subject.id] = {
-                        solved: Math.floor(Math.random() * 100),
+                        solved: Math.floor(Math.random() * 100), // Random solved questions for demo
                         total: subject.totalQuestions
                     };
                 });
 
                 return {
-                    questionsSolved: 247,
-                    mockTestsTaken: 3,
-                    streak: 12,
-                    weakAreas: ['DBMS Normalization', 'Graph Algorithms'],
+                    questionsSolved: 247, // Example initial value
+                    mockTestsTaken: 3,    // Example initial value
+                    streak: 12,           // Example initial value
+                    weakAreas: ['DBMS Normalization', 'Graph Algorithms'], // Example initial value
                     subjectProgress: subjectProgress
                 };
             };
